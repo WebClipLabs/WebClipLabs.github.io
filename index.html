@@ -1,40 +1,380 @@
 <!doctype html>
 <html>
 <head>
-<!-- iOS Web App -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="WebClipLabs">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- Icons -->
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <link rel="apple-touch-icon" href="IMG_1961.jpeg">
 <link rel="icon" type="image/png" href="05E6941A--4D12-B35F-881ED3ECEF7E.png">
-
-<!-- Optional -->
-<meta name="theme-color" content="#0f1728">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>iOS 6 Fullscreen Test</title>
-
+<title>iOS 6 Web App Sensor Demo</title>
 <style>
-body{
-  margin:0;
-  background:black;
-  color:white;
-  font:24px Helvetica;
-  height:200vh;
-}
-.center{
-  padding-top:100px;
-  text-align:center;
-}
+  body{margin:0;background:#0f1728;color:#fff;font:14px -apple-system,Helvetica;-webkit-text-size-adjust:100%;}
+  header{padding:14px 16px;background:#111c34;border-bottom:1px solid #243152;position:sticky;top:0;}
+  h1{margin:0;font-size:17px;}
+  h1 small{display:block;font-weight:normal;color:#9aa7c7;font-size:12px;margin-top:2px;}
+  section{border-bottom:1px solid #1c2745;padding:12px 16px;}
+  h2{margin:0 0 8px;font-size:14px;color:#7fb1ff;text-transform:uppercase;letter-spacing:.06em;}
+  .row{display:flex;justify-content:space-between;padding:3px 0;font-family:Menlo,monospace;font-size:12px;}
+  .k{color:#9aa7c7;}
+  .v{color:#fff;text-align:right;word-break:break-all;max-width:60%;}
+  .ok{color:#7CFF9E;} .no{color:#FF6B6B;} .mb{color:#FFD66B;}
+  button,input[type=file]{background:#243152;color:#fff;border:1px solid #3a4d80;border-radius:6px;padding:8px 12px;font-size:13px;margin:4px 4px 4px 0;-webkit-appearance:none;}
+  button:active{background:#3a4d80;}
+  #log{font-family:Menlo,monospace;font-size:11px;color:#9aa7c7;white-space:pre-wrap;max-height:140px;overflow:auto;background:#0a1226;padding:8px;border-radius:6px;}
+  canvas{background:#0a1226;border-radius:6px;display:block;}
+  img.preview{max-width:100%;border-radius:6px;margin-top:8px;}
+  .compass{width:120px;height:120px;border-radius:60px;border:2px solid #3a4d80;margin:8px auto;position:relative;}
+  .compass .n{position:absolute;top:4px;left:50%;margin-left:-6px;color:#FF6B6B;font-weight:bold;}
+  .needle{position:absolute;left:50%;top:50%;width:2px;height:50px;background:#7fb1ff;transform-origin:50% 0;margin-left:-1px;}
+  .bar{height:8px;background:#243152;border-radius:4px;overflow:hidden;margin:2px 0;}
+  .bar > div{height:100%;background:#7fb1ff;width:50%;}
 </style>
 </head>
 <body>
-<div class="center">
-  iOS 6 Fullscreen Web App Test
-</div>
+<header>
+  <h1>WebClipLabs Sensor Demo
+    <small>What a web app can access on iOS 6.1.6</small>
+  </h1>
+</header>
+
+<section>
+  <h2>Environment</h2>
+  <div id="env"></div>
+</section>
+
+<section>
+  <h2>Standalone / Display</h2>
+  <div id="standalone"></div>
+</section>
+
+<section>
+  <h2>Screen &amp; Window</h2>
+  <div id="screen"></div>
+</section>
+
+<section>
+  <h2>Geolocation</h2>
+  <button onclick="getLoc()">Get location</button>
+  <button onclick="watchLoc()">Watch</button>
+  <button onclick="stopLoc()">Stop</button>
+  <div id="geo"></div>
+</section>
+
+<section>
+  <h2>Device Orientation (gyro / compass)</h2>
+  <div class="compass"><div class="n">N</div><div class="needle" id="needle"></div></div>
+  <div id="orient"></div>
+</section>
+
+<section>
+  <h2>Device Motion (accelerometer)</h2>
+  <div>X <div class="bar"><div id="ax"></div></div></div>
+  <div>Y <div class="bar"><div id="ay"></div></div></div>
+  <div>Z <div class="bar"><div id="az"></div></div></div>
+  <div id="motion"></div>
+</section>
+
+<section>
+  <h2>Touch &amp; Multi-touch</h2>
+  <canvas id="touchpad" width="320" height="120"></canvas>
+  <div id="touch"></div>
+</section>
+
+<section>
+  <h2>Camera / Photo Library</h2>
+  <input type="file" id="cam" accept="image/*">
+  <div id="camInfo"></div>
+  <img id="preview" class="preview" style="display:none">
+</section>
+
+<section>
+  <h2>Audio</h2>
+  <button onclick="beep()">Play tone</button>
+  <button onclick="speak()">HTML5 audio file</button>
+  <div id="audio"></div>
+</section>
+
+<section>
+  <h2>Storage</h2>
+  <button onclick="testStorage()">Test storage</button>
+  <div id="storage"></div>
+</section>
+
+<section>
+  <h2>Network</h2>
+  <button onclick="testNet()">Ping</button>
+  <div id="net"></div>
+</section>
+
+<section>
+  <h2>Battery / Vibration / Notifications</h2>
+  <button onclick="tryVibrate()">Vibrate</button>
+  <button onclick="tryNotify()">Notify</button>
+  <div id="misc"></div>
+</section>
+
+<section>
+  <h2>Clipboard / Share / Bluetooth / USB / NFC</h2>
+  <div id="modern"></div>
+</section>
+
+<section>
+  <h2>Log</h2>
+  <div id="log"></div>
+</section>
+
+<script>
+function row(k,v,cls){return '<div class="row"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>';}
+function yesNo(b){return b?'<span class="ok">yes</span>':'<span class="no">no</span>';}
+function log(){var a=Array.prototype.slice.call(arguments).join(' ');var l=document.getElementById('log');l.innerHTML=(new Date().toLocaleTimeString())+' '+a+'\n'+l.innerHTML;}
+
+// Environment
+(function(){
+  var n=navigator,h='';
+  h+=row('userAgent',n.userAgent);
+  h+=row('platform',n.platform);
+  h+=row('language',n.language);
+  h+=row('cookieEnabled',yesNo(n.cookieEnabled));
+  h+=row('onLine',yesNo(n.onLine));
+  h+=row('hardwareConcurrency',(n.hardwareConcurrency!=null?n.hardwareConcurrency:'n/a'));
+  h+=row('deviceMemory',(n.deviceMemory!=null?n.deviceMemory+' GB':'n/a'));
+  h+=row('maxTouchPoints',(n.maxTouchPoints!=null?n.maxTouchPoints:'n/a'));
+  document.getElementById('env').innerHTML=h;
+})();
+
+// Standalone
+(function(){
+  var h='';
+  h+=row('navigator.standalone',yesNo(window.navigator.standalone));
+  h+=row('display-mode standalone',yesNo(window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  h+=row('apple-mobile-web-app-capable','set in meta');
+  document.getElementById('standalone').innerHTML=h;
+})();
+
+// Screen
+function paintScreen(){
+  var s=screen,w=window,h='';
+  h+=row('screen',s.width+' x '+s.height);
+  h+=row('avail',s.availWidth+' x '+s.availHeight);
+  h+=row('inner',w.innerWidth+' x '+w.innerHeight);
+  h+=row('devicePixelRatio',w.devicePixelRatio||1);
+  h+=row('orientation',(w.orientation!=null?w.orientation+'°':'n/a'));
+  h+=row('colorDepth',s.colorDepth+'-bit');
+  document.getElementById('screen').innerHTML=h;
+}
+paintScreen();
+window.addEventListener('resize',paintScreen);
+window.addEventListener('orientationchange',paintScreen);
+
+// Geolocation
+var watchId=null;
+function showPos(p){
+  var c=p.coords,h='';
+  h+=row('latitude',c.latitude.toFixed(6));
+  h+=row('longitude',c.longitude.toFixed(6));
+  h+=row('accuracy',c.accuracy.toFixed(1)+' m');
+  h+=row('altitude',c.altitude!=null?c.altitude.toFixed(1)+' m':'n/a');
+  h+=row('altitudeAccuracy',c.altitudeAccuracy!=null?c.altitudeAccuracy.toFixed(1)+' m':'n/a');
+  h+=row('heading',c.heading!=null?c.heading.toFixed(1)+'°':'n/a');
+  h+=row('speed',c.speed!=null?c.speed.toFixed(2)+' m/s':'n/a');
+  h+=row('timestamp',new Date(p.timestamp).toLocaleTimeString());
+  document.getElementById('geo').innerHTML=h;
+}
+function geoErr(e){document.getElementById('geo').innerHTML=row('error',e.message,'no');}
+function getLoc(){
+  if(!navigator.geolocation){document.getElementById('geo').innerHTML=row('geolocation','unsupported','no');return;}
+  navigator.geolocation.getCurrentPosition(showPos,geoErr,{enableHighAccuracy:true,timeout:15000});
+}
+function watchLoc(){
+  if(!navigator.geolocation)return;
+  stopLoc();
+  watchId=navigator.geolocation.watchPosition(showPos,geoErr,{enableHighAccuracy:true});
+  log('watching geolocation id='+watchId);
+}
+function stopLoc(){if(watchId!=null){navigator.geolocation.clearWatch(watchId);log('stopped watch '+watchId);watchId=null;}}
+
+// Orientation
+(function(){
+  var supported=('DeviceOrientationEvent' in window);
+  document.getElementById('orient').innerHTML=row('DeviceOrientationEvent',yesNo(supported));
+  if(!supported)return;
+  window.addEventListener('deviceorientation',function(e){
+    var h='';
+    h+=row('alpha (compass)',e.alpha!=null?e.alpha.toFixed(1)+'°':'n/a');
+    h+=row('beta (front-back)',e.beta!=null?e.beta.toFixed(1)+'°':'n/a');
+    h+=row('gamma (left-right)',e.gamma!=null?e.gamma.toFixed(1)+'°':'n/a');
+    h+=row('webkitCompassHeading',e.webkitCompassHeading!=null?e.webkitCompassHeading.toFixed(1)+'°':'n/a');
+    h+=row('webkitCompassAccuracy',e.webkitCompassAccuracy!=null?e.webkitCompassAccuracy+'°':'n/a');
+    document.getElementById('orient').innerHTML=h;
+    var heading=e.webkitCompassHeading!=null?-e.webkitCompassHeading:(e.alpha!=null?e.alpha:0);
+    document.getElementById('needle').style.webkitTransform='rotate('+heading+'deg)';
+    document.getElementById('needle').style.transform='rotate('+heading+'deg)';
+  },false);
+})();
+
+// Motion
+(function(){
+  var supported=('DeviceMotionEvent' in window);
+  document.getElementById('motion').innerHTML=row('DeviceMotionEvent',yesNo(supported));
+  if(!supported)return;
+  function pct(v){return Math.max(0,Math.min(100,50+v*5))+'%';}
+  window.addEventListener('devicemotion',function(e){
+    var a=e.accelerationIncludingGravity||{};
+    var ar=e.accelerationIncludingGravity||{};
+    var rr=e.rotationRate||{};
+    document.getElementById('ax').style.width=pct(a.x||0);
+    document.getElementById('ay').style.width=pct(a.y||0);
+    document.getElementById('az').style.width=pct(a.z||0);
+    var h='';
+    h+=row('accel+gravity x',a.x!=null?a.x.toFixed(2):'n/a');
+    h+=row('accel+gravity y',a.y!=null?a.y.toFixed(2):'n/a');
+    h+=row('accel+gravity z',a.z!=null?a.z.toFixed(2):'n/a');
+    h+=row('rotationRate alpha',rr.alpha!=null?rr.alpha.toFixed(2):'n/a');
+    h+=row('rotationRate beta',rr.beta!=null?rr.beta.toFixed(2):'n/a');
+    h+=row('rotationRate gamma',rr.gamma!=null?rr.gamma.toFixed(2):'n/a');
+    h+=row('interval',e.interval!=null?e.interval+' ms':'n/a');
+    document.getElementById('motion').innerHTML=h;
+  },false);
+})();
+
+// Touch
+(function(){
+  var c=document.getElementById('touchpad'),ctx=c.getContext('2d');
+  ctx.fillStyle='#0a1226';ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#7fb1ff';ctx.font='12px Menlo';
+  ctx.fillText('Touch / drag here',8,16);
+  var info=document.getElementById('touch');
+  info.innerHTML=row('ontouchstart',yesNo('ontouchstart' in window));
+  function paint(ev){
+    ev.preventDefault();
+    ctx.fillStyle='rgba(10,18,38,0.15)';ctx.fillRect(0,0,c.width,c.height);
+    var r=c.getBoundingClientRect();
+    var h=row('touches',ev.touches.length);
+    for(var i=0;i<ev.touches.length;i++){
+      var t=ev.touches[i],x=t.clientX-r.left,y=t.clientY-r.top;
+      ctx.fillStyle=['#7fb1ff','#FFD66B','#7CFF9E','#FF6B6B','#c79bff'][i%5];
+      ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.fill();
+      h+=row('touch '+i,x.toFixed(0)+','+y.toFixed(0));
+    }
+    info.innerHTML=row('ontouchstart',yesNo(true))+h;
+  }
+  c.addEventListener('touchstart',paint,false);
+  c.addEventListener('touchmove',paint,false);
+})();
+
+// Camera
+(function(){
+  var inp=document.getElementById('cam'),info=document.getElementById('camInfo'),img=document.getElementById('preview');
+  var supported=('FileReader' in window);
+  info.innerHTML=row('input accept="image/*"','available')+row('FileReader',yesNo(supported))+row('capture attribute',yesNo('capture' in inp));
+  inp.onchange=function(){
+    var f=inp.files&&inp.files[0];if(!f)return;
+    var h=row('name',f.name)+row('type',f.type)+row('size',(f.size/1024).toFixed(1)+' KB');
+    info.innerHTML=info.innerHTML.split('<div class="row"><span class="k">name')[0]+h;
+    if(window.FileReader){
+      var r=new FileReader();
+      r.onload=function(e){img.src=e.target.result;img.style.display='block';};
+      r.readAsDataURL(f);
+    }
+  };
+})();
+
+// Audio
+function beep(){
+  var info=document.getElementById('audio');
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC){info.innerHTML=row('AudioContext','unsupported','no');return;}
+  var ac=new AC();var o=ac.createOscillator();var g=ac.createGain();
+  o.connect(g);g.connect(ac.destination);o.frequency.value=440;g.gain.value=.1;
+  o.start?o.start(0):o.noteOn(0);
+  setTimeout(function(){o.stop?o.stop(0):o.noteOff(0);ac.close&&ac.close();},400);
+  info.innerHTML=row('AudioContext','playing 440Hz','ok');
+}
+function speak(){
+  var info=document.getElementById('audio');
+  info.innerHTML=row('speechSynthesis',yesNo('speechSynthesis' in window))+row('HTMLAudioElement',yesNo('Audio' in window));
+}
+
+// Storage
+function testStorage(){
+  var h='',k='wcl_test';
+  try{localStorage.setItem(k,'1');h+=row('localStorage',yesNo(localStorage.getItem(k)=='1'));localStorage.removeItem(k);}catch(e){h+=row('localStorage',e.message,'no');}
+  try{sessionStorage.setItem(k,'1');h+=row('sessionStorage',yesNo(sessionStorage.getItem(k)=='1'));sessionStorage.removeItem(k);}catch(e){h+=row('sessionStorage',e.message,'no');}
+  h+=row('openDatabase (WebSQL)',yesNo('openDatabase' in window));
+  h+=row('indexedDB',yesNo('indexedDB' in window || 'webkitIndexedDB' in window));
+  h+=row('applicationCache',yesNo('applicationCache' in window));
+  h+=row('serviceWorker',yesNo(navigator.serviceWorker!=null));
+  document.getElementById('storage').innerHTML=h;
+}
+testStorage();
+
+// Network
+function testNet(){
+  var info=document.getElementById('net');
+  var h=row('navigator.onLine',yesNo(navigator.onLine));
+  h+=row('XMLHttpRequest',yesNo('XMLHttpRequest' in window));
+  h+=row('WebSocket',yesNo('WebSocket' in window));
+  h+=row('fetch',yesNo('fetch' in window));
+  h+=row('connection',navigator.connection?'available':'n/a');
+  info.innerHTML=h+row('pinging','...');
+  var t=Date.now();
+  try{
+    var x=new XMLHttpRequest();
+    x.open('GET','?_=' + t,true);
+    x.onreadystatechange=function(){if(x.readyState==4){info.innerHTML=h+row('round-trip',(Date.now()-t)+' ms, HTTP '+x.status,'ok');}};
+    x.send();
+  }catch(e){info.innerHTML=h+row('ping error',e.message,'no');}
+}
+
+// Misc
+function tryVibrate(){
+  var info=document.getElementById('misc');
+  var fn=navigator.vibrate||navigator.webkitVibrate||navigator.mozVibrate;
+  if(fn){fn.call(navigator,[200,100,200]);info.innerHTML=row('vibrate','triggered','ok');}
+  else info.innerHTML=row('vibrate','unsupported (no haptics on iOS Safari)','no');
+}
+function tryNotify(){
+  var info=document.getElementById('misc');
+  if('Notification' in window){
+    info.innerHTML=row('Notification','available, permission='+Notification.permission);
+    Notification.requestPermission(function(p){
+      info.innerHTML=row('Notification permission',p);
+      try{new Notification('WebClipLabs',{body:'Hello from a web app'});}catch(e){}
+    });
+  }else info.innerHTML=row('Notification','unsupported on iOS web apps','no');
+}
+(function(){
+  var h='';
+  h+=row('getBattery',yesNo(navigator.getBattery!=null));
+  h+=row('vibrate API',yesNo(navigator.vibrate!=null));
+  h+=row('Notification API',yesNo('Notification' in window));
+  h+=row('Push API',yesNo('PushManager' in window));
+  document.getElementById('misc').innerHTML=h;
+})();
+
+// Modern APIs (mostly unsupported on iOS 6)
+(function(){
+  var h='';
+  h+=row('navigator.clipboard',yesNo(navigator.clipboard!=null));
+  h+=row('document.execCommand',yesNo('execCommand' in document));
+  h+=row('navigator.share',yesNo(navigator.share!=null));
+  h+=row('Web Bluetooth',yesNo(navigator.bluetooth!=null));
+  h+=row('WebUSB',yesNo(navigator.usb!=null));
+  h+=row('NFC (NDEFReader)',yesNo('NDEFReader' in window));
+  h+=row('getUserMedia (camera stream)',yesNo((navigator.getUserMedia||navigator.webkitGetUserMedia||navigator.mediaDevices)!=null));
+  h+=row('WebRTC RTCPeerConnection',yesNo(('RTCPeerConnection' in window)||('webkitRTCPeerConnection' in window)));
+  h+=row('Gamepad API',yesNo('getGamepads' in navigator));
+  h+=row('Screen Orientation API',yesNo(screen.orientation!=null));
+  h+=row('Wake Lock',yesNo(navigator.wakeLock!=null));
+  h+=row('Payment Request',yesNo('PaymentRequest' in window));
+  h+=row('Credentials',yesNo(navigator.credentials!=null));
+  h+=row('Permissions',yesNo(navigator.permissions!=null));
+  document.getElementById('modern').innerHTML=h;
+})();
+
+window.addEventListener('error',function(e){log('ERR',e.message);});
+log('ready');
+</script>
 </body>
 </html>
